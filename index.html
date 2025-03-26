@@ -16,26 +16,6 @@
           <div class="upload-overlay" id="uploadOverlay">Click or drag and drop your image here</div>
           <input type="file" id="imageInput" accept="image/*" style="display: none;">
         </div>
-        
-        <!-- Bottom Ribbon -->
-        <div class="bottom-ribbon">
-          <div class="tooltip">
-            <button onclick="undo()" aria-label="Undo last action">Undo</button>
-            <span class="tooltiptext">Revert to previous edit</span>
-          </div>
-          <div class="tooltip">
-            <button onclick="redo()" aria-label="Redo last action">Redo</button>
-            <span class="tooltiptext">Restore undone edit</span>
-          </div>
-          <div class="tooltip">
-            <button onclick="downloadImage()" aria-label="Download edited image">Download</button>
-            <span class="tooltiptext">Save your edited image</span>
-          </div>
-          <div class="tooltip">
-            <button onclick="resetCanvas()" aria-label="Reset editor">Reset</button>
-            <span class="tooltiptext">Clear all edits and start over</span>
-          </div>
-        </div>
       </div>
       
       <!-- Right Sidebar -->
@@ -105,6 +85,29 @@
               <option value="circle">Circle</option>
             </select>
             <span class="tooltiptext">Choose shape for blur tool</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons Section -->
+        <div class="sidebar-section">
+          <h3>Actions</h3>
+          <div class="bottom-ribbon">
+            <div class="tooltip">
+              <button onclick="undo()" aria-label="Undo last action">Undo</button>
+              <span class="tooltiptext">Revert to previous edit</span>
+            </div>
+            <div class="tooltip">
+              <button onclick="redo()" aria-label="Redo last action">Redo</button>
+              <span class="tooltiptext">Restore undone edit</span>
+            </div>
+            <div class="tooltip">
+              <button onclick="downloadImage()" aria-label="Download edited image">Download</button>
+              <span class="tooltiptext">Save your edited image</span>
+            </div>
+            <div class="tooltip">
+              <button onclick="resetCanvas()" aria-label="Reset editor">Reset</button>
+              <span class="tooltiptext">Clear all edits and start over</span>
+            </div>
           </div>
         </div>
       </div>
