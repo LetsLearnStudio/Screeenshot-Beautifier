@@ -8,9 +8,39 @@
 </head>
 <body>
   <div class="image-editor-container">
-    <div class="container">
-      <div class="controls-ribbon">
-        <div class="control-group">
+    <div class="editor-wrapper">
+      <!-- Canvas Area -->
+      <div class="canvas-container">
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="canvas"></canvas>
+          <div class="upload-overlay" id="uploadOverlay">Click or drag and drop your image here</div>
+          <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <!-- Bottom Ribbon -->
+        <div class="bottom-ribbon">
+          <div class="tooltip">
+            <button onclick="undo()" aria-label="Undo last action">Undo</button>
+            <span class="tooltiptext">Revert to previous edit</span>
+          </div>
+          <div class="tooltip">
+            <button onclick="redo()" aria-label="Redo last action">Redo</button>
+            <span class="tooltiptext">Restore undone edit</span>
+          </div>
+          <div class="tooltip">
+            <button onclick="downloadImage()" aria-label="Download edited image">Download</button>
+            <span class="tooltiptext">Save your edited image</span>
+          </div>
+          <div class="tooltip">
+            <button onclick="resetCanvas()" aria-label="Reset editor">Reset</button>
+            <span class="tooltiptext">Clear all edits and start over</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
           <h3>Image Styling</h3>
           <div class="tooltip">
             <label for="aspectRatio">Aspect Ratio</label>
@@ -42,17 +72,19 @@
           </div>
         </div>
         
-        <div class="control-group">
+        <div class="sidebar-section">
           <h3>Color & Gradient</h3>
           <div class="tooltip">
             <label>Gradient Colors</label>
-            <input type="color" id="color1" value="#ff0000" aria-label="First gradient color">
-            <input type="color" id="color2" value="#0000ff" aria-label="Second gradient color">
+            <div class="color-pickers">
+              <input type="color" id="color1" value="#ff0000" aria-label="First gradient color">
+              <input type="color" id="color2" value="#0000ff" aria-label="Second gradient color">
+            </div>
             <span class="tooltiptext">Select colors for background gradient</span>
           </div>
         </div>
         
-        <div class="control-group">
+        <div class="sidebar-section">
           <h3>Blur & Editing</h3>
           <div class="tooltip">
             <input type="checkbox" id="blurToggle" onclick="toggleBlurMode()">
@@ -74,31 +106,6 @@
             </select>
             <span class="tooltiptext">Choose shape for blur tool</span>
           </div>
-        </div>
-      </div>
-
-      <div class="canvas-wrapper" id="canvasWrapper">
-        <canvas id="canvas"></canvas>
-        <div class="upload-overlay" id="uploadOverlay">Click or drag and drop your image here</div>
-        <input type="file" id="imageInput" accept="image/*" style="display: none;">
-      </div>
-
-      <div class="ribbon">
-        <div class="tooltip">
-          <button onclick="undo()" aria-label="Undo last action">Undo</button>
-          <span class="tooltiptext">Revert to previous edit</span>
-        </div>
-        <div class="tooltip">
-          <button onclick="redo()" aria-label="Redo last action">Redo</button>
-          <span class="tooltiptext">Restore undone edit</span>
-        </div>
-        <div class="tooltip">
-          <button onclick="downloadImage()" aria-label="Download edited image">Download Image</button>
-          <span class="tooltiptext">Save your edited image</span>
-        </div>
-        <div class="tooltip">
-          <button onclick="resetCanvas()" aria-label="Reset editor">Reset</button>
-          <span class="tooltiptext">Clear all edits and start over</span>
         </div>
       </div>
     </div>
