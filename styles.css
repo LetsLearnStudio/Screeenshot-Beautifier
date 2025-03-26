@@ -47,71 +47,50 @@ body {
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.bottom-ribbon {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  padding: 10px;
-  background: #f4f4f4;
-  border-radius: 8px;
-}
-
-.bottom-ribbon button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.bottom-ribbon button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
 .sidebar {
-  width: 250px;
+  width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 10px;
+  gap: 15px;
+  padding: 12px;
   overflow-y: auto;
 }
 
 .sidebar-section {
   background: #f4f4f4;
   border-radius: 10px;
-  padding: 15px;
+  padding: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .sidebar-section h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
+  margin: 0;
   color: #333;
-  font-size: 16px;
+  font-size: 14px;
   border-bottom: 2px solid #007bff;
   padding-bottom: 5px;
+  margin-bottom: 12px;
 }
 
 .sidebar-section > div {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 15px;
 }
 
 .sidebar-section label {
   font-weight: 600;
   color: #555;
-  margin-bottom: 5px;
+  font-size: 13px;
+  margin-bottom: 3px;
 }
 
 .color-pickers {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tooltip {
@@ -120,7 +99,7 @@ body {
 
 .tooltip .tooltiptext {
   visibility: hidden;
-  width: 200px;
+  width: 180px;
   background-color: #333;
   color: white;
   text-align: center;
@@ -133,6 +112,7 @@ body {
   transform: translateX(-50%);
   opacity: 0;
   transition: opacity 0.3s;
+  font-size: 12px;
 }
 
 .tooltip:hover .tooltiptext {
@@ -163,7 +143,37 @@ body {
   display: none;
 }
 
-/* Responsive adjustments */
+.bottom-ribbon {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+  margin-top: auto;
+}
+
+.bottom-ribbon button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  font-size: 14px;
+}
+
+.bottom-ribbon button:hover {
+  background-color: #0056b3;
+  transform: scale(1.03);
+}
+
+.sidebar-section input[type="range"],
+.sidebar-section select {
+  width: 100%;
+  margin: 5px 0;
+}
+
 @media (max-width: 768px) {
   .editor-wrapper {
     flex-direction: column;
