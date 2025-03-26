@@ -1,0 +1,216 @@
+.image-editor-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.image-editor-container .container {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  width: 100%;
+}
+
+.controls-ribbon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-editor-container .controls-ribbon > div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.image-editor-container label {
+  font-weight: 600;
+  color: #555;
+  font-size: 12px;
+}
+
+.image-editor-container input[type="color"],
+.image-editor-container input[type="range"],
+.image-editor-container select,
+.image-editor-container button {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.image-editor-container input[type="color"] {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
+.image-editor-container input[type="range"] {
+  width: 80px;
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+.image-editor-container input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.image-editor-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -5px;
+}
+
+.image-editor-container input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.image-editor-container input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.image-editor-container select {
+  width: 100px;
+}
+
+.image-editor-container button {
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.image-editor-container button:hover {
+  background: #0056b3;
+}
+
+.image-editor-container canvas {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  max-width: 100%;
+  display: block;
+}
+
+.image-editor-container input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.canvas-wrapper {
+  position: relative;
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  border: 2px dashed #007bff;
+  border-radius: 10px;
+  z-index: 10;
+  padding: 10px;
+  text-align: center;
+}
+
+.upload-overlay.hidden {
+  display: none;
+}
+
+.blur-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.blur-controls > div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.image-editor-container .action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.image-editor-container .action-buttons button {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.ribbon {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ribbon > div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ribbon button {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.ribbon input[type="range"] {
+  width: 80px;
+}
+
+.ribbon select {
+  width: 100px;
+}
