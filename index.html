@@ -3,38 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Editor Tool</title>
+  <title>Smart Image Editor</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="image-editor-container">
     <div class="container">
       <div class="controls-ribbon">
-        <div>
-          <label>Gradient</label>
-          <input type="color" id="color1" value="#ff0000">
-          <input type="color" id="color2" value="#0000ff">
+        <div class="control-group">
+          <h3>Image Styling</h3>
+          <div class="tooltip">
+            <label for="aspectRatio">Aspect Ratio</label>
+            <select id="aspectRatio" aria-label="Image aspect ratio">
+              <option value="original">Original</option>
+              <option value="square">Square</option>
+              <option value="horizontal">Horizontal</option>
+              <option value="vertical">Vertical</option>
+            </select>
+            <span class="tooltiptext">Choose how your image will be sized and cropped</span>
+          </div>
+          
+          <div class="tooltip">
+            <label for="cornerRadius">Image Radius</label>
+            <input type="range" id="cornerRadius" min="0" max="100" value="0" aria-label="Image corner roundness">
+            <span class="tooltiptext">Adjust the roundness of image corners</span>
+          </div>
+          
+          <div class="tooltip">
+            <label for="backgroundSize">Padding</label>
+            <input type="range" id="backgroundSize" min="0" max="100" value="20" aria-label="Background padding">
+            <span class="tooltiptext">Add space around your image</span>
+          </div>
+          
+          <div class="tooltip">
+            <label for="bgCornerRadius">BG Radius</label>
+            <input type="range" id="bgCornerRadius" min="0" max="100" value="0" aria-label="Background corner roundness">
+            <span class="tooltiptext">Adjust the roundness of background edges</span>
+          </div>
         </div>
-        <div>
-          <label for="aspectRatio">Aspect Ratio</label>
-          <select id="aspectRatio">
-            <option value="original">Original</option>
-            <option value="square">Square</option>
-            <option value="horizontal">Horizontal</option>
-            <option value="vertical">Vertical</option>
-          </select>
+        
+        <div class="control-group">
+          <h3>Color & Gradient</h3>
+          <div class="tooltip">
+            <label>Gradient Colors</label>
+            <input type="color" id="color1" value="#ff0000" aria-label="First gradient color">
+            <input type="color" id="color2" value="#0000ff" aria-label="Second gradient color">
+            <span class="tooltiptext">Select colors for background gradient</span>
+          </div>
         </div>
-        <div>
-          <label for="backgroundSize">Padding</label>
-          <input type="range" id="backgroundSize" min="0" max="100" value="20">
-        </div>
-        <div>
-          <label for="bgCornerRadius">BG Radius</label>
-          <input type="range" id="bgCornerRadius" min="0" max="100" value="0">
-        </div>
-        <div>
-          <label for="cornerRadius">Image Radius</label>
-          <input type="range" id="cornerRadius" min="0" max="100" value="0">
+        
+        <div class="control-group">
+          <h3>Blur & Editing</h3>
+          <div class="tooltip">
+            <input type="checkbox" id="blurToggle" onclick="toggleBlurMode()">
+            <label for="blurToggle">Blur Mode</label>
+            <span class="tooltiptext">Enable blur editing tool</span>
+          </div>
+          
+          <div id="blurIntensityDiv" style="display: none;" class="tooltip">
+            <label for="blurIntensity">Blur Intensity</label>
+            <input type="range" id="blurIntensity" min="1" max="20" value="5" aria-label="Blur intensity">
+            <span class="tooltiptext">Control the strength of the blur effect</span>
+          </div>
+          
+          <div id="shapeDiv" style="display: none;" class="tooltip">
+            <label for="shape">Blur Shape</label>
+            <select id="shape" aria-label="Blur shape">
+              <option value="rectangle">Rectangle</option>
+              <option value="circle">Circle</option>
+            </select>
+            <span class="tooltiptext">Choose shape for blur tool</span>
+          </div>
         </div>
       </div>
 
@@ -45,32 +84,21 @@
       </div>
 
       <div class="ribbon">
-        <div>
-          <button onclick="undo()">Undo</button>
+        <div class="tooltip">
+          <button onclick="undo()" aria-label="Undo last action">Undo</button>
+          <span class="tooltiptext">Revert to previous edit</span>
         </div>
-        <div>
-          <button onclick="redo()">Redo</button>
+        <div class="tooltip">
+          <button onclick="redo()" aria-label="Redo last action">Redo</button>
+          <span class="tooltiptext">Restore undone edit</span>
         </div>
-        <div>
-          <button onclick="downloadImage()">Download Image</button>
+        <div class="tooltip">
+          <button onclick="downloadImage()" aria-label="Download edited image">Download Image</button>
+          <span class="tooltiptext">Save your edited image</span>
         </div>
-        <div>
-          <button onclick="resetCanvas()">Reset</button>
-        </div>
-        <div>
-          <input type="checkbox" id="blurToggle" onclick="toggleBlurMode()">
-          <label for="blurToggle">Blur</label>
-        </div>
-        <div id="blurIntensityDiv" style="display: none;">
-          <label for="blurIntensity">Intensity</label>
-          <input type="range" id="blurIntensity" min="1" max="20" value="5">
-        </div>
-        <div id="shapeDiv" style="display: none;">
-          <label for="shape">Shape</label>
-          <select id="shape">
-            <option value="rectangle">Rectangle</option>
-            <option value="circle">Circle</option>
-          </select>
+        <div class="tooltip">
+          <button onclick="resetCanvas()" aria-label="Reset editor">Reset</button>
+          <span class="tooltiptext">Clear all edits and start over</span>
         </div>
       </div>
     </div>
