@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Image Editor</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Add Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <div class="image-editor-container">
@@ -109,19 +111,27 @@
           <h3>Actions</h3>
           <div class="bottom-ribbon">
             <div class="tooltip">
-              <button onclick="undo()">Undo</button>
+              <button onclick="undo()" class="icon-button" aria-label="Undo">
+                <i class="fas fa-undo"></i>
+              </button>
               <span class="tooltiptext">Revert to previous edit</span>
             </div>
             <div class="tooltip">
-              <button onclick="redo()">Redo</button>
+              <button onclick="redo()" class="icon-button" aria-label="Redo">
+                <i class="fas fa-redo"></i>
+              </button>
               <span class="tooltiptext">Restore undone edit</span>
             </div>
             <div class="tooltip">
-              <button onclick="downloadImage()">Download</button>
+              <button onclick="downloadImage()" class="icon-button" aria-label="Download">
+                <i class="fas fa-download"></i>
+              </button>
               <span class="tooltiptext">Save your edited image</span>
             </div>
             <div class="tooltip">
-              <button onclick="resetCanvas()">Reset</button>
+              <button onclick="resetCanvas()" class="icon-button" aria-label="Reset">
+                <i class="fas fa-trash-alt"></i>
+              </button>
               <span class="tooltiptext">Clear all edits and start over</span>
             </div>
           </div>
