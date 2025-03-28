@@ -140,5 +140,26 @@
     </div>
   </div>
   <script src="script.js"></script>
+
+  <script>
+// Secure message handler
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://letslearnstudio.github.io') return;
+  if (event.data.type === 'FROM_EXTENSION' && event.data.image) {
+    const img = new Image();
+    img.onload = () => {
+      image.src = event.data.image;
+      image.onload = () => {
+        drawImageWithEffects();
+        history = [];
+        currentState = -1;
+        uploadOverlay.classList.add('hidden');
+      };
+    };
+    img.src = event.data.image;
+  }
+});
+</script>
+
 </body>
 </html>
