@@ -141,12 +141,15 @@
   </div>
   <script src="script.js"></script>
 
-  <script>
-// Secure message handler
-window.addEventListener('message', (event) => {
+<script>
+// Fail-safe image loader
+let extensionImageAttempts = 0;
+const handleExtensionImage = (event) => {
   if (event.origin !== 'https://letslearnstudio.github.io') return;
+  
   if (event.data.type === 'FROM_EXTENSION' && event.data.image) {
     const img = new Image();
+    
     img.onload = () => {
       image.src = event.data.image;
       image.onload = () => {
@@ -156,9 +159,20 @@ window.addEventListener('message', (event) => {
         uploadOverlay.classList.add('hidden');
       };
     };
+    
+    img.onerror = () => {
+      if(extensionImageAttempts < 3) {
+        extensionImageAttempts++;
+        setTimeout(() => img.src = event.data.image, 500);
+      }
+    };
+    
     img.src = event.data.image;
+    window.removeEventListener('message', handleExtensionImage);
   }
-});
+};
+
+window.addEventListener('message', handleExtensionImage);
 </script>
 
 </body>
