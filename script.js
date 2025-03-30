@@ -48,8 +48,18 @@ function drawDefaultGradient() {
 function saveState() {
   // Add a small delay to prevent performance issues on rapid changes
   setTimeout(() => {
-    if (history.length >= MAX_HISTORY) history.shift();
-    history = history.slice(0, currentState + 1); // Remove any future states
+    // Remove any future states if we're not at the end of history
+    if (currentState < history.length - 1) {
+      history = history.slice(0, currentState + 1);
+    }
+    
+    // Remove oldest state if we've reached max capacity
+    if (history.length >= MAX_HISTORY) {
+      history.shift();
+      currentState--;  // Adjust currentState when removing the oldest item
+    }
+    
+    // Save current state
     const state = canvas.toDataURL();
     history.push(state);
     currentState = history.length - 1;
