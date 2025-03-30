@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
   canvasWrapper.addEventListener('dragenter', () => {
     uploadOverlay.classList.add('drag-active');
   });
+
+  // Initialize blur mode based on toggle state
+  toggleBlurMode();
 });
 
 // Replace original undo-redo with blur-specific history system
@@ -250,7 +253,9 @@ color1.addEventListener('change', debouncedDrawAndSave);
 color2.addEventListener('input', debouncedDrawOnly);
 color2.addEventListener('change', debouncedDrawAndSave);
 
-// Blur mode handling with visual feedback
+// Blur mode toggle handling with visual feedback
+blurToggle.addEventListener('change', toggleBlurMode);
+
 function toggleBlurMode() {
   isBlurMode = blurToggle.checked;
   document.getElementById("blurIntensityDiv").style.display = isBlurMode ? "flex" : "none";
@@ -362,8 +367,10 @@ function drawImageWithEffects(saveAfterDraw = true) {
   ctx.drawImage(image, offsetX, offsetY, imgWidth, imgHeight);
   ctx.restore();
   
-  // We only want to save state for blur operations, not regular modifications
-  // Note: Removed the history saveState call from here
+  if (saveAfterDraw && image.src) {
+    // Only save state if we have an image and are requested to save
+    saveBlurState();
+  }
 }
 
 // Updated mousedown event listener for blur
@@ -392,6 +399,33 @@ canvas.addEventListener('mousedown', (e) => {
   }
 });
 
+// ADDED: mousemove event listener for blur tool
+canvas.addEventListener('mousemove', (e) => {
+  if (isBlurMode && isDrawing) {
+    const rect = canvas.getBoundingClientRect();
+    const currentX = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const currentY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Load the pre-blur state before applying a new blur
+    if (preBlurState) {
+      const img = new Image();
+      img.src = preBlurState;
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        
+        // Apply the blur effect
+        applyBlur(startX, startY, currentX, currentY);
+        hasAppliedBlur = true; // Mark that we've applied a blur
+      };
+    } else {
+      // If no pre-blur state, just apply the blur directly
+      applyBlur(startX, startY, currentX, currentY);
+      hasAppliedBlur = true; // Mark that we've applied a blur
+    }
+  }
+});
+
 // Updated mouseup event listener for blur
 canvas.addEventListener('mouseup', () => {
   if (isBlurMode && isDrawing) {
@@ -401,6 +435,7 @@ canvas.addEventListener('mouseup', () => {
     if (hasAppliedBlur) {
       saveBlurState(); // Save state only once per complete blur action
       hasAppliedBlur = false; // Reset the flag
+      preBlurState = null; // Clear the pre-blur state
     }
   }
 });
@@ -414,6 +449,7 @@ canvas.addEventListener('mouseleave', () => {
     if (hasAppliedBlur) {
       saveBlurState();
       hasAppliedBlur = false;
+      preBlurState = null; // Clear the pre-blur state
     }
   }
 });
@@ -444,10 +480,17 @@ function applyBlur(startX, startY, endX, endY) {
   // Apply blur effect
   ctx.filter = `blur(${blurIntensity}px)`;
   
-  // Draw the image on the blurred area
-  const offsetX = (canvas.width - image.width) / 2;
-  const offsetY = (canvas.height - image.height) / 2;
-  ctx.drawImage(image, offsetX, offsetY, image.width, image.height);
+  // First, get the entire canvas content
+  const originalImage = new Image();
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx.drawImage(canvas, 0, 0);
+  originalImage.src = tempCanvas.toDataURL();
+  
+  // Draw the blurred content
+  ctx.drawImage(originalImage, 0, 0);
   
   ctx.restore();
 }
