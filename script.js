@@ -18,120 +18,232 @@ let isBlurMode = false;
 let isDrawing = false;
 let startX, startY;
 
+// Improve startup experience with default gradient
+document.addEventListener('DOMContentLoaded', () => {
+  drawDefaultGradient();
+  
+  // Add visual feedback when dragging
+  canvasWrapper.addEventListener('dragenter', () => {
+    uploadOverlay.classList.add('drag-active');
+  });
+});
+
 // Undo-Redo functionality
 let history = [];
 let currentState = -1;
+const MAX_HISTORY = 20; // Increase history capacity
 
 // Initialize canvas
-canvas.width = 400;
-canvas.height = 300;
+canvas.width = 600; // Larger default canvas
+canvas.height = 400;
+
+function drawDefaultGradient() {
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, color1.value);
+  gradient.addColorStop(1, color2.value);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
 
 function saveState() {
-  if (history.length >= 10) history.shift();
-  const state = canvas.toDataURL();
-  history.push(state);
-  currentState = history.length - 1;
+  // Add a small delay to prevent performance issues on rapid changes
+  setTimeout(() => {
+    if (history.length >= MAX_HISTORY) history.shift();
+    history = history.slice(0, currentState + 1); // Remove any future states
+    const state = canvas.toDataURL();
+    history.push(state);
+    currentState = history.length - 1;
+  }, 0);
 }
 
 function undo() {
   if (currentState > 0) {
     currentState--;
-    const img = new Image();
-    img.src = history[currentState];
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    };
+    loadState(history[currentState]);
   }
 }
 
 function redo() {
   if (currentState < history.length - 1) {
     currentState++;
-    const img = new Image();
-    img.src = history[currentState];
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    };
+    loadState(history[currentState]);
   }
 }
 
-// Image input handling
+function loadState(src) {
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+  };
+}
+
+// Better image input handling
 imageInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      image.src = event.target.result;
-      image.onload = () => {
-        drawImageWithEffects();
-        history = [];
-        currentState = -1;
-        uploadOverlay.classList.add('hidden');
-      };
-    };
-    reader.readAsDataURL(file);
+    handleImageFile(file);
   }
 });
 
-// Drag and drop handling
+function handleImageFile(file) {
+  // Show loading indicator
+  uploadOverlay.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i><span>Processing image...</span>';
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    image = new Image();
+    image.src = event.target.result;
+    image.onload = () => {
+      // Reset canvas to accommodate image size
+      resizeCanvasForImage();
+      drawImageWithEffects();
+      history = [];
+      currentState = -1;
+      saveState(); // Save initial state
+      uploadOverlay.classList.add('hidden');
+    };
+  };
+  reader.readAsDataURL(file);
+}
+
+// Resize canvas based on image
+function resizeCanvasForImage() {
+  const maxWidth = canvasWrapper.clientWidth * 0.9;
+  const maxHeight = canvasWrapper.clientHeight * 0.9;
+  
+  let newWidth = image.width;
+  let newHeight = image.height;
+  
+  // Scale down if image is too large
+  if (newWidth > maxWidth) {
+    const ratio = maxWidth / newWidth;
+    newWidth *= ratio;
+    newHeight *= ratio;
+  }
+  
+  if (newHeight > maxHeight) {
+    const ratio = maxHeight / newHeight;
+    newWidth *= ratio;
+    newHeight *= ratio;
+  }
+  
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+}
+
+// Improved drag and drop handling
 uploadOverlay.addEventListener('click', () => imageInput.click());
 
 canvasWrapper.addEventListener('dragover', (e) => {
   e.preventDefault();
-  uploadOverlay.style.backgroundColor = "rgba(0,123,255,0.2)";
+  uploadOverlay.classList.add('drag-active');
 });
 
 canvasWrapper.addEventListener('dragleave', (e) => {
   e.preventDefault();
-  uploadOverlay.style.backgroundColor = "rgba(255,255,255,0.8)";
+  uploadOverlay.classList.remove('drag-active');
 });
 
 canvasWrapper.addEventListener('drop', (e) => {
   e.preventDefault();
-  uploadOverlay.style.backgroundColor = "rgba(255,255,255,0.8)";
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      image.src = event.target.result;
-      image.onload = () => {
-        drawImageWithEffects();
-        history = [];
-        currentState = -1;
-        uploadOverlay.classList.add('hidden');
-      };
-    };
-    reader.readAsDataURL(file);
+  uploadOverlay.classList.remove('drag-active');
+  
+  if (e.dataTransfer.files.length > 0) {
+    const file = e.dataTransfer.files[0];
+    if (file.type.match('image.*')) {
+      handleImageFile(file);
+    } else {
+      // Show error message for non-image files
+      uploadOverlay.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Please drop an image file</span>';
+      setTimeout(() => {
+        uploadOverlay.innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Click or drag and drop your image here</span><span class="upload-subtitle">Support JPG, PNG files</span>';
+      }, 2000);
+    }
   }
 });
 
-// Event listeners for controls
-cornerRadius.addEventListener('input', drawImageWithEffects);
-backgroundSizeInput.addEventListener('input', drawImageWithEffects);
-bgCornerRadius.addEventListener('input', drawImageWithEffects);
-aspectRatio.addEventListener('change', drawImageWithEffects);
-color1.addEventListener('input', drawImageWithEffects);
-color2.addEventListener('input', drawImageWithEffects);
+// Add keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  // Check if no input elements are focused
+  if (document.activeElement === document.body || document.activeElement === canvas) {
+    // Ctrl+Z for undo
+    if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      undo();
+    }
+    // Ctrl+Y for redo
+    if (e.ctrlKey && e.key === 'y') {
+      e.preventDefault();
+      redo();
+    }
+    // Delete or Backspace to reset
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (confirm('Reset the canvas? All changes will be lost.')) {
+        resetCanvas();
+      }
+    }
+  }
+});
 
-// Blur mode handling
+// Event listeners for controls with debouncing
+function debounce(func, delay) {
+  let timer;
+  return function() {
+    const context = this;
+    const args = arguments;
+    clearTimeout(timer);
+    timer = setTimeout(() => func.apply(context, args), delay);
+  };
+}
+
+// Apply immediate update for sliders without saving state
+const debouncedDrawOnly = debounce(() => {
+  drawImageWithEffects(false);
+}, 10);
+
+// Apply update and save state after interaction ends
+const debouncedDrawAndSave = debounce(() => {
+  drawImageWithEffects(true);
+}, 300);
+
+// Attach events with different debounce strategies
+cornerRadius.addEventListener('input', debouncedDrawOnly);
+cornerRadius.addEventListener('change', debouncedDrawAndSave);
+
+backgroundSizeInput.addEventListener('input', debouncedDrawOnly);
+backgroundSizeInput.addEventListener('change', debouncedDrawAndSave);
+
+bgCornerRadius.addEventListener('input', debouncedDrawOnly);
+bgCornerRadius.addEventListener('change', debouncedDrawAndSave);
+
+aspectRatio.addEventListener('change', () => drawImageWithEffects(true));
+color1.addEventListener('input', debouncedDrawOnly);
+color1.addEventListener('change', debouncedDrawAndSave);
+color2.addEventListener('input', debouncedDrawOnly);
+color2.addEventListener('change', debouncedDrawAndSave);
+
+// Blur mode handling with visual feedback
 function toggleBlurMode() {
   isBlurMode = blurToggle.checked;
   document.getElementById("blurIntensityDiv").style.display = isBlurMode ? "flex" : "none";
   document.getElementById("shapeDiv").style.display = isBlurMode ? "flex" : "none";
-  if (isBlurMode) saveState();
+  
+  if (isBlurMode) {
+    canvas.style.cursor = 'crosshair';
+    saveState();
+  } else {
+    canvas.style.cursor = 'default';
+  }
 }
 
-// Main drawing function
-function drawImageWithEffects() {
-  if (!image.src) {
+// Main drawing function with improved performance
+function drawImageWithEffects(saveAfterDraw = true) {
+  if (!image.src || !image.complete) {
+    // Default gradient if no image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, color1.value);
-    gradient.addColorStop(1, color2.value);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawDefaultGradient();
     return;
   }
 
@@ -140,44 +252,60 @@ function drawImageWithEffects() {
   const padding = parseInt(backgroundSizeInput.value);
   const selectedAspectRatio = aspectRatio.value;
 
+  let imgWidth = image.width;
+  let imgHeight = image.height;
   let canvasWidth, canvasHeight;
+  
+  // Calculate dimensions based on aspect ratio
   switch (selectedAspectRatio) {
     case 'square':
-      canvasWidth = canvasHeight = Math.max(image.width, image.height);
+      const square = Math.max(imgWidth, imgHeight);
+      canvasWidth = canvasHeight = square;
       break;
     case 'horizontal':
-      canvasWidth = Math.max(image.width, (image.height * 16) / 9);
+      canvasWidth = Math.max(imgWidth, (imgHeight * 16) / 9);
       canvasHeight = (canvasWidth * 9) / 16;
       break;
     case 'vertical':
-      canvasHeight = Math.max(image.height, (image.width * 16) / 9);
+      canvasHeight = Math.max(imgHeight, (imgWidth * 16) / 9);
       canvasWidth = (canvasHeight * 9) / 16;
       break;
-    default:
-      canvasWidth = image.width;
-      canvasHeight = image.height;
+    default: // original
+      canvasWidth = imgWidth;
+      canvasHeight = imgHeight;
   }
 
+  // Apply padding with scale factor
   const scaleFactor = 1 + padding / 100;
-  canvas.width = canvasWidth * scaleFactor;
-  canvas.height = canvasHeight * scaleFactor;
+  const paddedWidth = canvasWidth * scaleFactor;
+  const paddedHeight = canvasHeight * scaleFactor;
+  
+  // Only resize the canvas if dimensions have changed
+  if (canvas.width !== paddedWidth || canvas.height !== paddedHeight) {
+    canvas.width = paddedWidth;
+    canvas.height = paddedHeight;
+  }
+  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw background
+  // Draw background with rounded corners
   ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(bgRadius, 0);
-  ctx.lineTo(canvas.width - bgRadius, 0);
-  ctx.arcTo(canvas.width, 0, canvas.width, bgRadius, bgRadius);
-  ctx.lineTo(canvas.width, canvas.height - bgRadius);
-  ctx.arcTo(canvas.width, canvas.height, canvas.width - bgRadius, canvas.height, bgRadius);
-  ctx.lineTo(bgRadius, canvas.height);
-  ctx.arcTo(0, canvas.height, 0, canvas.height - bgRadius, bgRadius);
-  ctx.lineTo(0, bgRadius);
-  ctx.arcTo(0, 0, bgRadius, 0, bgRadius);
-  ctx.closePath();
-  ctx.clip();
+  if (bgRadius > 0) {
+    ctx.beginPath();
+    ctx.moveTo(bgRadius, 0);
+    ctx.lineTo(canvas.width - bgRadius, 0);
+    ctx.arcTo(canvas.width, 0, canvas.width, bgRadius, bgRadius);
+    ctx.lineTo(canvas.width, canvas.height - bgRadius);
+    ctx.arcTo(canvas.width, canvas.height, canvas.width - bgRadius, canvas.height, bgRadius);
+    ctx.lineTo(bgRadius, canvas.height);
+    ctx.arcTo(0, canvas.height, 0, canvas.height - bgRadius, bgRadius);
+    ctx.lineTo(0, bgRadius);
+    ctx.arcTo(0, 0, bgRadius, 0, bgRadius);
+    ctx.closePath();
+    ctx.clip();
+  }
 
+  // Improved gradient with better performance
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
   gradient.addColorStop(0, color1.value);
   gradient.addColorStop(1, color2.value);
@@ -185,33 +313,46 @@ function drawImageWithEffects() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  // Draw image
-  const offsetX = (canvas.width - image.width) / 2;
-  const offsetY = (canvas.height - image.height) / 2;
+  // Calculate image position
+  const offsetX = (canvas.width - imgWidth) / 2;
+  const offsetY = (canvas.height - imgHeight) / 2;
+  
+  // Draw image with rounded corners if needed
   ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(offsetX + radius, offsetY);
-  ctx.lineTo(offsetX + image.width - radius, offsetY);
-  ctx.arcTo(offsetX + image.width, offsetY, offsetX + image.width, offsetY + radius, radius);
-  ctx.lineTo(offsetX + image.width, offsetY + image.height - radius);
-  ctx.arcTo(offsetX + image.width, offsetY + image.height, offsetX + image.width - radius, offsetY + image.height, radius);
-  ctx.lineTo(offsetX + radius, offsetY + image.height);
-  ctx.arcTo(offsetX, offsetY + image.height, offsetX, offsetY + image.height - radius, radius);
-  ctx.lineTo(offsetX, offsetY + radius);
-  ctx.arcTo(offsetX, offsetY, offsetX + radius, offsetY, radius);
-  ctx.closePath();
-  ctx.clip();
-  ctx.drawImage(image, offsetX, offsetY, image.width, image.height);
+  if (radius > 0) {
+    ctx.beginPath();
+    ctx.moveTo(offsetX + radius, offsetY);
+    ctx.lineTo(offsetX + imgWidth - radius, offsetY);
+    ctx.arcTo(offsetX + imgWidth, offsetY, offsetX + imgWidth, offsetY + radius, radius);
+    ctx.lineTo(offsetX + imgWidth, offsetY + imgHeight - radius);
+    ctx.arcTo(offsetX + imgWidth, offsetY + imgHeight, offsetX + imgWidth - radius, offsetY + imgHeight, radius);
+    ctx.lineTo(offsetX + radius, offsetY + imgHeight);
+    ctx.arcTo(offsetX, offsetY + imgHeight, offsetX, offsetY + imgHeight - radius, radius);
+    ctx.lineTo(offsetX, offsetY + radius);
+    ctx.arcTo(offsetX, offsetY, offsetX + radius, offsetY, radius);
+    ctx.closePath();
+    ctx.clip();
+  }
+  
+  ctx.drawImage(image, offsetX, offsetY, imgWidth, imgHeight);
   ctx.restore();
+  
+  // Save state if needed and not in rapid input mode
+  if (saveAfterDraw) {
+    saveState();
+  }
 }
 
-// Blur functionality
+// Enhanced blur functionality
 canvas.addEventListener('mousedown', (e) => {
   if (isBlurMode) {
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
     startX = (e.clientX - rect.left) * (canvas.width / rect.width);
     startY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // For better UX, save state before starting to draw
+    saveState();
   }
 });
 
@@ -220,56 +361,93 @@ canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     const endX = (e.clientX - rect.left) * (canvas.width / rect.width);
     const endY = (e.clientY - rect.top) * (canvas.height / rect.height);
-    applyBlur(startX, startY, endX, endY);
+    
+    // Throttle blur application for better performance
+    requestAnimationFrame(() => {
+      applyBlur(startX, startY, endX, endY);
+    });
   }
 });
 
 canvas.addEventListener('mouseup', () => {
-  if (isBlurMode) {
+  if (isBlurMode && isDrawing) {
     isDrawing = false;
     saveState();
   }
 });
 
 canvas.addEventListener('mouseleave', () => {
-  if (isBlurMode) isDrawing = false;
+  if (isBlurMode && isDrawing) {
+    isDrawing = false;
+    saveState();
+  }
 });
 
 function applyBlur(startX, startY, endX, endY) {
   const shape = shapeSelect.value;
   const blurIntensity = parseInt(blurIntensityInput.value);
+  
   ctx.save();
+  
+  // Create clipping path for the blur region
   ctx.beginPath();
   if (shape === 'rectangle') {
-    ctx.rect(startX, startY, endX - startX, endY - startY);
-  } else {
+    const width = endX - startX;
+    const height = endY - startY;
+    ctx.rect(
+      Math.min(startX, startX + width),
+      Math.min(startY, startY + height),
+      Math.abs(width),
+      Math.abs(height)
+    );
+  } else { // circle
     const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
     ctx.arc(startX, startY, radius, 0, Math.PI * 2);
   }
   ctx.clip();
+  
+  // Apply blur effect
   ctx.filter = `blur(${blurIntensity}px)`;
-  ctx.drawImage(image, (canvas.width - image.width) / 2, (canvas.height - image.height) / 2, image.width, image.height);
+  
+  // Draw the image on the blurred area
+  const offsetX = (canvas.width - image.width) / 2;
+  const offsetY = (canvas.height - image.height) / 2;
+  ctx.drawImage(image, offsetX, offsetY, image.width, image.height);
+  
   ctx.restore();
 }
 
-// Download and reset
+// Download functionality with improved file naming
 function downloadImage() {
   const link = document.createElement('a');
-  link.download = 'edited-image.png';
-  link.href = canvas.toDataURL();
+  
+  // Create a better filename with timestamp
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  link.download = `edited-image-${timestamp}.png`;
+  
+  // Set quality and get data URL
+  link.href = canvas.toDataURL('image/png');
+  
+  // Trigger download
   link.click();
 }
 
+// Enhanced reset with confirmation
 function resetCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   image = new Image();
   uploadOverlay.classList.remove('hidden');
-  imageInput.value = '';
-  canvas.width = 400;
-  canvas.height = 300;
+  uploadOverlay.innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Click or drag and drop your image here</span><span class="upload-subtitle">Support JPG, PNG files</span>';
   
-  color1.value = "#ff0000";
-  color2.value = "#0000ff";
+  // Reset input values
+  imageInput.value = '';
+  canvas.width = 600;
+  canvas.height = 400;
+  
+  // Reset controls to default values
+  color1.value = "#3498db";
+  color2.value = "#9b59b6";
   cornerRadius.value = 0;
   backgroundSizeInput.value = 20;
   aspectRatio.value = "original";
@@ -278,10 +456,18 @@ function resetCanvas() {
   blurIntensityInput.value = 5;
   shapeSelect.value = "rectangle";
   
+  // Hide optional panels
   document.getElementById("blurIntensityDiv").style.display = "none";
   document.getElementById("shapeDiv").style.display = "none";
   
+  // Reset cursor
+  canvas.style.cursor = 'default';
+  
+  // Clear history
   history = [];
   currentState = -1;
-  drawImageWithEffects();
+  
+  // Draw default gradient
+  drawDefaultGradient();
+  saveState();
 }
