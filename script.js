@@ -18,6 +18,7 @@ let isBlurMode = false;
 let isDrawing = false;
 let startX, startY;
 let hasAppliedBlur = false; // Flag to track if a blur has been applied in the current action
+let preBlurState; // Added to store state before blur begins
 
 // Improve startup experience with default gradient
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,10 +30,49 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Undo-Redo functionality
-let history = [];
-let currentState = -1;
-const MAX_HISTORY = 20; // Increase history capacity
+// Replace original undo-redo with blur-specific history system
+let blurHistory = [];
+let blurCurrentState = -1;
+const MAX_BLUR_HISTORY = 20;
+
+function saveBlurState() {
+  // Add a small delay to prevent performance issues
+  setTimeout(() => {
+    if (blurHistory.length >= MAX_BLUR_HISTORY) blurHistory.shift();
+    blurHistory = blurHistory.slice(0, blurCurrentState + 1); // Remove any future states
+    const state = canvas.toDataURL();
+    blurHistory.push(state);
+    blurCurrentState = blurHistory.length - 1;
+    
+    // Update UI to reflect state
+    updateUndoRedoButtonStates();
+  }, 0);
+}
+
+function loadBlurState(src) {
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+  };
+}
+
+function updateUndoRedoButtonStates() {
+  // Add visual feedback for button states
+  const undoButton = document.querySelector('button[onclick="undo()"]');
+  const redoButton = document.querySelector('button[onclick="redo()"]');
+  
+  if (undoButton) {
+    undoButton.disabled = blurCurrentState <= 0;
+    undoButton.style.opacity = blurCurrentState <= 0 ? "0.5" : "1";
+  }
+  
+  if (redoButton) {
+    redoButton.disabled = blurCurrentState >= blurHistory.length - 1;
+    redoButton.style.opacity = blurCurrentState >= blurHistory.length - 1 ? "0.5" : "1";
+  }
+}
 
 // Initialize canvas
 canvas.width = 600; // Larger default canvas
@@ -46,38 +86,20 @@ function drawDefaultGradient() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function saveState() {
-  // Add a small delay to prevent performance issues on rapid changes
-  setTimeout(() => {
-    if (history.length >= MAX_HISTORY) history.shift();
-    history = history.slice(0, currentState + 1); // Remove any future states
-    const state = canvas.toDataURL();
-    history.push(state);
-    currentState = history.length - 1;
-  }, 0);
-}
-
+// Updated undo function to use blur history
 function undo() {
-  if (currentState > 0) {
-    currentState--;
-    loadState(history[currentState]);
+  if (blurCurrentState > 0) {
+    blurCurrentState--;
+    loadBlurState(blurHistory[blurCurrentState]);
   }
 }
 
+// Updated redo function to use blur history
 function redo() {
-  if (currentState < history.length - 1) {
-    currentState++;
-    loadState(history[currentState]);
+  if (blurCurrentState < blurHistory.length - 1) {
+    blurCurrentState++;
+    loadBlurState(blurHistory[blurCurrentState]);
   }
-}
-
-function loadState(src) {
-  const img = new Image();
-  img.src = src;
-  img.onload = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
-  };
 }
 
 // Better image input handling
@@ -85,6 +107,9 @@ imageInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) {
     handleImageFile(file);
+    // Reset blur history when loading a new image
+    blurHistory = [];
+    blurCurrentState = -1;
   }
 });
 
@@ -100,9 +125,9 @@ function handleImageFile(file) {
       // Reset canvas to accommodate image size
       resizeCanvasForImage();
       drawImageWithEffects();
-      history = [];
-      currentState = -1;
-      saveState(); // Save initial state
+      blurHistory = []; // Reset blur history
+      blurCurrentState = -1;
+      saveBlurState(); // Save initial state
       uploadOverlay.classList.add('hidden');
     };
   };
@@ -238,7 +263,7 @@ function toggleBlurMode() {
   }
 }
 
-// Main drawing function with improved performance
+// Updated drawImageWithEffects to NOT save to blur history
 function drawImageWithEffects(saveAfterDraw = true) {
   if (!image.src || !image.complete) {
     // Default gradient if no image
@@ -337,13 +362,11 @@ function drawImageWithEffects(saveAfterDraw = true) {
   ctx.drawImage(image, offsetX, offsetY, imgWidth, imgHeight);
   ctx.restore();
   
-  // Save state if needed and not in rapid input mode
-  if (saveAfterDraw) {
-    saveState();
-  }
+  // We only want to save state for blur operations, not regular modifications
+  // Note: Removed the history saveState call from here
 }
 
-// Enhanced blur functionality with fixes for undo/redo
+// Updated mousedown event listener for blur
 canvas.addEventListener('mousedown', (e) => {
   if (isBlurMode) {
     isDrawing = true;
@@ -352,47 +375,44 @@ canvas.addEventListener('mousedown', (e) => {
     startX = (e.clientX - rect.left) * (canvas.width / rect.width);
     startY = (e.clientY - rect.top) * (canvas.height / rect.height);
     
-    // Save the state before starting to blur, but don't save again until mouseup
-    // ONLY if we don't have a saved state yet (initial state)
-    if (history.length === 0) {
-      saveState();
+    // Take a snapshot before starting to blur
+    if (blurHistory.length === 0) {
+      saveBlurState();
+    } else {
+      // Create a temporary canvas to store the current state
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0);
+      
+      // Store this as the pre-blur state to use if needed
+      preBlurState = tempCanvas.toDataURL();
     }
   }
 });
 
-canvas.addEventListener('mousemove', (e) => {
-  if (isBlurMode && isDrawing) {
-    hasAppliedBlur = true; // Mark that a blur has been applied
-    const rect = canvas.getBoundingClientRect();
-    const endX = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const endY = (e.clientY - rect.top) * (canvas.height / rect.height);
-    
-    // Throttle blur application for better performance
-    requestAnimationFrame(() => {
-      applyBlur(startX, startY, endX, endY);
-    });
-  }
-});
-
+// Updated mouseup event listener for blur
 canvas.addEventListener('mouseup', () => {
   if (isBlurMode && isDrawing) {
     isDrawing = false;
     
     // Only save state if a blur was actually applied during this action
     if (hasAppliedBlur) {
-      saveState(); // Save state only once per complete blur action
+      saveBlurState(); // Save state only once per complete blur action
       hasAppliedBlur = false; // Reset the flag
     }
   }
 });
 
+// Updated mouseleave event listener for blur
 canvas.addEventListener('mouseleave', () => {
   if (isBlurMode && isDrawing) {
     isDrawing = false;
     
     // Only save state if a blur was actually applied during this action
     if (hasAppliedBlur) {
-      saveState();
+      saveBlurState();
       hasAppliedBlur = false;
     }
   }
@@ -448,7 +468,7 @@ function downloadImage() {
   link.click();
 }
 
-// Enhanced reset with confirmation
+// Updated resetCanvas function to handle blur history
 function resetCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   image = new Image();
@@ -478,11 +498,14 @@ function resetCanvas() {
   // Reset cursor
   canvas.style.cursor = 'default';
   
-  // Clear history
-  history = [];
-  currentState = -1;
+  // Clear blur history
+  blurHistory = [];
+  blurCurrentState = -1;
   
   // Draw default gradient
   drawDefaultGradient();
-  saveState();
+  saveBlurState();
+  
+  // Update UI to reflect state
+  updateUndoRedoButtonStates();
 }
