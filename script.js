@@ -17,6 +17,7 @@ let image = new Image();
 let isBlurMode = false;
 let isDrawing = false;
 let startX, startY;
+let hasAppliedBlur = false; // Flag to track if a blur has been applied in the current action
 
 // Improve startup experience with default gradient
 document.addEventListener('DOMContentLoaded', () => {
@@ -56,7 +57,6 @@ function saveState() {
   }, 0);
 }
 
-// Fixed undo function - will now work properly with a single click
 function undo() {
   if (currentState > 0) {
     currentState--;
@@ -64,7 +64,6 @@ function undo() {
   }
 }
 
-// Fixed redo function - will now work properly with a single click
 function redo() {
   if (currentState < history.length - 1) {
     currentState++;
@@ -234,7 +233,6 @@ function toggleBlurMode() {
   
   if (isBlurMode) {
     canvas.style.cursor = 'crosshair';
-    saveState();
   } else {
     canvas.style.cursor = 'default';
   }
@@ -345,21 +343,26 @@ function drawImageWithEffects(saveAfterDraw = true) {
   }
 }
 
-// Enhanced blur functionality
+// Enhanced blur functionality with fixes for undo/redo
 canvas.addEventListener('mousedown', (e) => {
   if (isBlurMode) {
     isDrawing = true;
+    hasAppliedBlur = false; // Reset blur applied flag
     const rect = canvas.getBoundingClientRect();
     startX = (e.clientX - rect.left) * (canvas.width / rect.width);
     startY = (e.clientY - rect.top) * (canvas.height / rect.height);
     
-    // For better UX, save state before starting to draw
-    saveState();
+    // Save the state before starting to blur, but don't save again until mouseup
+    // ONLY if we don't have a saved state yet (initial state)
+    if (history.length === 0) {
+      saveState();
+    }
   }
 });
 
 canvas.addEventListener('mousemove', (e) => {
   if (isBlurMode && isDrawing) {
+    hasAppliedBlur = true; // Mark that a blur has been applied
     const rect = canvas.getBoundingClientRect();
     const endX = (e.clientX - rect.left) * (canvas.width / rect.width);
     const endY = (e.clientY - rect.top) * (canvas.height / rect.height);
@@ -374,14 +377,24 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => {
   if (isBlurMode && isDrawing) {
     isDrawing = false;
-    saveState();
+    
+    // Only save state if a blur was actually applied during this action
+    if (hasAppliedBlur) {
+      saveState(); // Save state only once per complete blur action
+      hasAppliedBlur = false; // Reset the flag
+    }
   }
 });
 
 canvas.addEventListener('mouseleave', () => {
   if (isBlurMode && isDrawing) {
     isDrawing = false;
-    saveState();
+    
+    // Only save state if a blur was actually applied during this action
+    if (hasAppliedBlur) {
+      saveState();
+      hasAppliedBlur = false;
+    }
   }
 });
 
