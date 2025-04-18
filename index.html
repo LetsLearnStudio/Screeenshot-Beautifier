@@ -174,5 +174,54 @@
     </div>
   </div>
   <script src="script.js"></script>
+
+  <script>
+// New improved version
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://letslearnstudio.github.io') return;
+  
+  if (event.data.type === 'FROM_EXTENSION' && event.data.image) {
+    let attempts = 0; // ✅ Local counter per image
+    const maxAttempts = 3;
+
+    const tryLoad = () => {
+      const img = new Image();
+      
+      img.onload = () => {
+        image.src = event.data.image;
+        image.onload = () => {
+          drawImageWithEffects();
+          history = [];
+          currentState = -1;
+          uploadOverlay.classList.add('hidden');
+        };
+      };
+      
+      img.onerror = () => {
+        if(attempts < maxAttempts) {
+          attempts++; // ✅ Isolated to this image
+          setTimeout(tryLoad, 500 * attempts); // ✅ Exponential backoff
+        } else {
+          alert('Failed to load image after 3 attempts. Please try again.');
+          cleanupCanvas(); // ✅ Proper cleanup
+        }
+      };
+      
+      img.src = event.data.image;
+    };
+
+    tryLoad();
+  }
+});
+
+function cleanupCanvas() {
+  // Reset canvas to initial state
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  uploadOverlay.classList.remove('hidden');
+  image = new Image(); // Reset image object
+}
+</script>
 </body>
 </html>
