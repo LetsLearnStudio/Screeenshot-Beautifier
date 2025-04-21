@@ -57,7 +57,7 @@
           
           <div class="tooltip">
             <div>
-              <label for="backgroundSize">Padding</label>
+              <label for="backgroundSize">Add Background</label>
               <input type="range" id="backgroundSize" min="0" max="100" value="20">
             </div>
             <span class="tooltiptext">Add space around your image</span>
@@ -77,6 +77,41 @@
               <input type="range" id="shadowIntensity" min="0" max="50" value="0">
             </div>
             <span class="tooltiptext">Adjust the drop shadow around the image</span>
+          </div>
+        </div>
+        
+        <!-- New Padding Normalization Section -->
+        <div class="sidebar-section">
+          <h3><i class="fas fa-expand"></i> Padding Normalization</h3>
+          <div class="tooltip">
+            <div>
+              <input type="checkbox" id="normalizeToggle">
+              <label for="normalizeToggle">Enable Normalization</label>
+            </div>
+            <span class="tooltiptext">Normalize the padding around your image</span>
+          </div>
+          
+          <div id="normalizationControls" style="display: none;">
+            <div class="tooltip">
+              <div>
+                <label for="paddingAmount">Padding Size</label>
+                <input type="range" id="paddingAmount" min="0" max="100" value="20">
+              </div>
+              <span class="tooltiptext">Adjust the amount of padding around the image</span>
+            </div>
+            
+            <div class="tooltip">
+              <div class="padding-info-container">
+                <div class="padding-label">Detected Padding:</div>
+                <div class="padding-values">
+                  <span id="paddingTop">0</span> | 
+                  <span id="paddingRight">0</span> | 
+                  <span id="paddingBottom">0</span> | 
+                  <span id="paddingLeft">0</span>
+                </div>
+              </div>
+              <span class="tooltiptext">Current padding measurements (top | right | bottom | left)</span>
+            </div>
           </div>
         </div>
         
@@ -174,9 +209,11 @@
     </div>
   </div>
   <script src="script.js"></script>
-
-  <script>
-// New improved version
+  <script src="historyManagement.js"></script>
+  <script src="colorGradient.js"></script>
+  <script src="blurEditing.js"></script>
+  <script src="paddingNormalization.js"></script>
+   <script>
 window.addEventListener('message', (event) => {
   if (event.origin !== 'https://letslearnstudio.github.io') return;
   
